@@ -9,4 +9,12 @@ class subcategorie extends Model
 {
     /** @use HasFactory<\Database\Factories\SubcategorieFactory> */
     use HasFactory;
+    protected $fillable = ['name','slug','description','category_id'];
+
+    public function category(){
+        return $this->belongsTo(Categorie::class);
+    }
+    public function tags(){
+        return $this->belongsToMany(Tag::class);
+    }
 }

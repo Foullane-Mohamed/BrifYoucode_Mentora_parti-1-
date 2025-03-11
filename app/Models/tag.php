@@ -9,4 +9,8 @@ class tag extends Model
 {
     /** @use HasFactory<\Database\Factories\TagFactory> */
     use HasFactory;
+    protected $fillable = ['name','slug','subcategorie_id'];
+    public function subcategorie(){
+        return $this->belongsTo(subcategorie::class);
+    }
 }

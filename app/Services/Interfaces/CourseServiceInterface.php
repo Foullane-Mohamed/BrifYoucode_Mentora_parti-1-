@@ -1,7 +1,6 @@
 <?php
 
-
-namespace App\Services\Interfaces;
+namespace App\Services\Interfaces\CourseServiceInterface;
 
 interface CourseServiceInterface
 {
@@ -10,8 +9,7 @@ interface CourseServiceInterface
     public function createCourse(array $data);
     public function updateCourse($id, array $data);
     public function deleteCourse($id);
-    public function enrollStudent($courseId, $userId);
-    public function updateProgress($courseId, $userId, $progress);
-    public function getStudentCourses($userId);
-    public function getMentorCourses($mentorId);
+    public function getCoursesByCategory($categoryId);
+    public function attachTagsToCourse($courseId, array $tagIds);
+    public function detachTagsFromCourse($courseId, array $tagIds);
 }

@@ -1,10 +1,12 @@
 <?php
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers\Api\CourseController;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\CourseResource;
 use App\Services\Interfaces\CourseServiceInterface;
 use Illuminate\Http\Request;
+
+
 
 class CourseController extends Controller
 {
@@ -23,23 +25,15 @@ class CourseController extends Controller
 
     public function store(Request $request)
     {
-        // Vérifier que l'utilisateur est un mentor
-        if (!$request->user()->isMentor()) {
-            return response()->json(['message' => 'Non autorisé'], 403);
-        }
-
-        $request->validate([
+        $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
-            'status' => 'required|string|in:draft,published',
+            'status' => 'required|in:draft,published',
+            'user_id' => 'required|exists:users,id',
+            'category_id' => 'nullable|exists:categories,id',
         ]);
 
-        $course = $this->courseService->createCourse([
-            'title' => $request->title,
-            'description' => $request->description,
-            'status' => $request->status,
-            'user_id' => $request->user()->id,
-        ]);
+        $course = $this->courseService->createCourse($validated);
 
         return new CourseResource($course);
     }
@@ -52,81 +46,58 @@ class CourseController extends Controller
 
     public function update(Request $request, $id)
     {
-        $course = $this->courseService->getCourseById($id);
-
-        // Vérifier que l'utilisateur est le créateur du cours
-        if ($request->user()->id !== $course->user_id) {
-            return response()->json(['message' => 'Non autorisé'], 403);
-        }
-
-        $request->validate([
-            'title' => 'sometimes|required|string|max:255',
-            'description' => 'sometimes|required|string',
-            'status' => 'sometimes|required|string|in:draft,published',
+        $validated = $request->validate([
+            'title' => 'sometimes|string|max:255',
+            'description' => 'sometimes|string',
+            'status' => 'sometimes|in:draft,published',
+            'user_id' => 'sometimes|exists:users,id',
+            'category_id' => 'nullable|exists:categories,id',
         ]);
 
-        $course = $this->courseService->updateCourse($id, $request->all());
+        $course = $this->courseService->updateCourse($id, $validated);
 
         return new CourseResource($course);
     }
 
-    public function destroy(Request $request, $id)
+    public function destroy($id)
     {
-        $course = $this->courseService->getCourseById($id);
-
-        // Vérifier que l'utilisateur est le créateur du cours
-        if ($request->user()->id !== $course->user_id) {
-            return response()->json(['message' => 'Non autorisé'], 403);
-        }
-
         $this->courseService->deleteCourse($id);
-
-        return response()->json(null, 204);
+        return response()->json(['message' => 'Cours supprimé avec succès'], 200);
     }
 
-    public function enroll(Request $request, $id)
+    public function coursesByCategory($categoryId)
     {
-        // Vérifier que le cours existe
-        $course = $this->courseService->getCourseById($id);
-
-        // Vérifier que l'utilisateur n'est pas le créateur du cours
-        if ($request->user()->id === $course->user_id) {
-            return response()->json(['message' => 'Vous ne pouvez pas vous inscrire à votre propre cours'], 400);
-        }
-
-        $this->courseService->enrollStudent($id, $request->user()->id);
-
-        return response()->json(['message' => 'Inscription réussie']);
+        $courses = $this->courseService->getCoursesByCategory($categoryId);
+        return CourseResource::collection($courses);
     }
 
-    public function updateProgress(Request $request, $id)
+    public function attachTags(Request $request, $courseId)
     {
-        $request->validate([
-            'progress' => 'required|integer|min:0|max:100'
+        $validated = $request->validate([
+            'tag_ids' => 'required|array',
+            'tag_ids.*' => 'exists:tags,id',
         ]);
 
-        // Vérifier que le cours existe
-        $this->courseService->getCourseById($id);
+        $tags = $this->courseService->attachTagsToCourse($courseId, $validated['tag_ids']);
 
-        $this->courseService->updateProgress($id, $request->user()->id, $request->progress);
-
-        return response()->json(['message' => 'Progression mise à jour']);
+        return response()->json([
+            'message' => 'Tags ajoutés avec succès',
+            'tags' => TagResource::collection($tags)
+        ]);
     }
 
-    public function enrolledCourses(Request $request)
+    public function detachTags(Request $request, $courseId)
     {
-        $courses = $this->courseService->getStudentCourses($request->user()->id);
-        return CourseResource::collection($courses);
-    }
+        $validated = $request->validate([
+            'tag_ids' => 'required|array',
+            'tag_ids.*' => 'exists:tags,id',
+        ]);
 
-    public function myCourses(Request $request)
-    {
-        // Vérifier que l'utilisateur est un mentor
-        if (!$request->user()->isMentor()) {
-            return response()->json(['message' => 'Non autorisé'], 403);
-        }
+        $tags = $this->courseService->detachTagsFromCourse($courseId, $validated['tag_ids']);
 
-        $courses = $this->courseService->getMentorCourses($request->user()->id);
-        return CourseResource::collection($courses);
+        return response()->json([
+            'message' => 'Tags supprimés avec succès',
+            'tags' => TagResource::collection($tags)
+        ]);
     }
 }

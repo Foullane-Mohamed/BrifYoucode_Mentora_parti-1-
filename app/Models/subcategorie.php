@@ -12,7 +12,7 @@ class subcategorie extends Model
     protected $fillable = ['name','slug','description','category_id'];
 
     public function category(){
-        return $this->belongsTo(Categorie::class);
+        return $this->belongsTo(category::class);
     }
     public function tags(){
         return $this->belongsToMany(Tag::class);

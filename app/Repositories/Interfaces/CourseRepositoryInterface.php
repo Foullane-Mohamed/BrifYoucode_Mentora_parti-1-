@@ -1,4 +1,6 @@
 <?php
+
+
 namespace App\Repositories\Interfaces;
 
 interface CourseRepositoryInterface
@@ -8,8 +10,7 @@ interface CourseRepositoryInterface
     public function create(array $data);
     public function update($id, array $data);
     public function delete($id);
-    public function enroll($courseId, $userId);
-    public function updateProgress($courseId, $userId, $progress);
-    public function getStudentCourses($userId);
-    public function getMentorCourses($mentorId);
+    public function getByCategoryId($categoryId);
+    public function attachTags($courseId, array $tagIds);
+    public function detachTags($courseId, array $tagIds);
 }

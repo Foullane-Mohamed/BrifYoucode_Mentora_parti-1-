@@ -14,25 +14,25 @@ return new class extends Migration
             $table->string('title');
             $table->text('description');
             $table->enum('status', ['draft', 'published'])->default('draft');
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('user_id')->constrained()->onDelete('cascade'); // créateur (mentor)
+            $table->foreignId('category_id')->nullable()->constrained()->onDelete('set null');
             $table->timestamps();
         });
 
-
-        Schema::create('course_user', function (Blueprint $table) {
+        // Table pivot pour les tags
+        Schema::create('course_tag', function (Blueprint $table) {
             $table->id();
             $table->foreignId('course_id')->constrained()->onDelete('cascade');
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->integer('progress')->default(0);
+            $table->foreignId('tag_id')->constrained()->onDelete('cascade');
             $table->timestamps();
 
-            $table->unique(['course_id', 'user_id']);
+            $table->unique(['course_id', 'tag_id']);
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('course_user');
+        Schema::dropIfExists('course_tag');
         Schema::dropIfExists('courses');
     }
 };

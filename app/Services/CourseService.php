@@ -1,5 +1,5 @@
 <?php
-namespace App\Services;
+namespace App\Services\CourseService;
 
 use App\Repositories\Interfaces\CourseRepositoryInterface;
 use App\Services\Interfaces\CourseServiceInterface;
@@ -58,5 +58,10 @@ class CourseService implements CourseServiceInterface
     public function getMentorCourses($mentorId)
     {
         return $this->courseRepository->getMentorCourses($mentorId);
+    }
+
+    public function getCoursesByCategory($categoryId)
+    {
+        // TODO: Implement getCoursesByCategory() method.
     }
 }
